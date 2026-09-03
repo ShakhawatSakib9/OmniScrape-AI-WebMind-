@@ -14,6 +14,11 @@ class ScrapingProject extends Model
         'container_selector', 'last_run_at', 'next_run_at'
     ];
 
+    protected $casts = [
+        'last_run_at' => 'datetime',
+        'next_run_at' => 'datetime',
+    ];
+
     protected static function boot()
     {
         parent::boot();
