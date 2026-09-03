@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OmniScrape AI — Autonomous Web Data & Self-Healing REST API Engine</title>
+    <title>OmniScrape — Autonomous Web Data & Self-Healing Infrastructure</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
@@ -17,17 +17,22 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Outfit', 'sans-serif'],
-                        mono: ['Fira Code', 'monospace'],
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
                     },
                     colors: {
-                        brand: {
-                            500: '#00b4d8',
-                            600: '#0096c7',
+                        surface: {
+                            base: '#0B0F17',
+                            card: '#111827',
+                            elevated: '#172033',
+                            border: '#1E293B',
+                            hover: '#1E293B'
                         },
-                        darkBg: '#090d16',
-                        darkCard: '#111827',
-                        glassBorder: 'rgba(255, 255, 255, 0.08)'
+                        brand: {
+                            primary: '#3B82F6',
+                            primaryHover: '#2563EB',
+                            accent: '#6366F1'
+                        }
                     }
                 }
             }
@@ -35,96 +40,114 @@
     </script>
     <style>
         body {
-            background-color: #080c14;
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(0, 180, 216, 0.12) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(114, 9, 183, 0.08) 0px, transparent 50%);
-            background-attachment: fixed;
+            background-color: #0B0F17;
+            color: #F8FAFC;
+            font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+            -webkit-font-smoothing: antialiased;
+            letter-spacing: -0.011em;
         }
-        .glass-card {
-            background: rgba(17, 24, 39, 0.7);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+        .enterprise-card {
+            background-color: #111827;
+            border: 1px solid #1E293B;
         }
-        .glow-btn {
-            box-shadow: 0 0 20px rgba(0, 180, 216, 0.35);
+        .enterprise-input {
+            background-color: #0D131F;
+            border: 1px solid #1E293B;
+            color: #F8FAFC;
         }
-        .glow-btn:hover {
-            box-shadow: 0 0 30px rgba(0, 180, 216, 0.6);
+        .enterprise-input:focus {
+            border-color: #3B82F6;
+            outline: none;
+            box-shadow: 0 0 0 1px #3B82F6;
+        }
+        /* Custom subtle scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0B0F17;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1E293B;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
         }
     </style>
 </head>
-<body class="text-slate-100 font-sans min-h-screen flex flex-col antialiased">
-    <header class="border-b border-glassBorder bg-darkCard/80 backdrop-blur-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
+<body class="min-h-screen flex flex-col">
+    <!-- Clean Minimalist Top Navbar -->
+    <header class="border-b border-surface-border bg-surface-card/90 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+            <div class="flex items-center space-x-6">
                 <a href="{{ route('dashboard') }}" class="flex items-center space-x-2.5">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-cyan-400 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-cyan-500/20">
-                        <i class="fa-solid fa-brain"></i>
+                    <div class="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                        <i class="fa-solid fa-cube"></i>
                     </div>
-                    <div>
-                        <div class="flex items-center space-x-2">
-                            <span class="font-extrabold text-xl tracking-tight bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">OmniScrape</span>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 uppercase">AI Engine</span>
-                        </div>
-                        <p class="text-[10px] text-slate-400 font-medium tracking-wide">Autonomous Web Data & Self-Healing REST API</p>
+                    <div class="flex items-center space-x-2">
+                        <span class="font-semibold text-sm tracking-tight text-white">OmniScrape</span>
+                        <span class="text-xs px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-mono text-[10px] border border-slate-700">v2.1</span>
                     </div>
                 </a>
+
+                <div class="h-4 w-px bg-slate-800 hidden md:block"></div>
+
+                <nav class="hidden md:flex items-center space-x-4">
+                    <a href="{{ route('dashboard') }}" class="text-xs font-medium transition {{ request()->routeIs('dashboard') ? 'text-white font-semibold' : 'text-slate-400 hover:text-slate-200' }}">
+                        Datasets
+                    </a>
+                    <a href="{{ route('projects.create') }}" class="text-xs font-medium transition {{ request()->routeIs('projects.create') ? 'text-white font-semibold' : 'text-slate-400 hover:text-slate-200' }}">
+                        New Agent
+                    </a>
+                </nav>
             </div>
 
-            <nav class="hidden md:flex items-center space-x-6">
-                <a href="{{ route('dashboard') }}" class="text-sm font-medium hover:text-cyan-400 transition {{ request()->routeIs('dashboard') ? 'text-cyan-400 font-semibold' : 'text-slate-300' }}">
-                    <i class="fa-solid fa-layer-group mr-1.5"></i> Datasets
-                </a>
-                <a href="{{ route('projects.create') }}" class="text-sm font-medium hover:text-cyan-400 transition {{ request()->routeIs('projects.create') ? 'text-cyan-400 font-semibold' : 'text-slate-300' }}">
-                    <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> New Scraper Agent
-                </a>
-            </nav>
-
             <div class="flex items-center space-x-3">
-                <div class="hidden sm:flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span>Self-Healing: Operational</span>
+                <div class="hidden sm:flex items-center space-x-2 px-2.5 py-1 rounded-md bg-emerald-950/40 border border-emerald-800/40 text-emerald-400 text-xs font-mono">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    <span class="text-[11px]">System Online</span>
                 </div>
-                <a href="{{ route('projects.create') }}" class="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-medium text-xs sm:text-sm glow-btn transition flex items-center space-x-2">
-                    <i class="fa-solid fa-plus"></i>
+
+                <a href="{{ route('projects.create') }}" class="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-950 font-medium text-xs shadow-sm transition flex items-center space-x-1.5">
+                    <i class="fa-solid fa-plus text-[10px]"></i>
                     <span>Create Agent</span>
                 </a>
             </div>
         </div>
     </header>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 w-full">
         @if(session('success'))
-            <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-sm flex items-center space-x-3">
-                <i class="fa-solid fa-circle-check text-lg"></i>
+            <div class="p-3.5 rounded-lg bg-emerald-950/30 border border-emerald-800/40 text-emerald-300 text-xs flex items-center space-x-2.5">
+                <i class="fa-solid fa-circle-check text-sm text-emerald-400"></i>
                 <span>{{ session('success') }}</span>
             </div>
         @endif
         @if(session('error'))
-            <div class="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-sm flex items-center space-x-3">
-                <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+            <div class="p-3.5 rounded-lg bg-rose-950/30 border border-rose-800/40 text-rose-300 text-xs flex items-center space-x-2.5">
+                <i class="fa-solid fa-triangle-exclamation text-sm text-rose-400"></i>
                 <span>{{ session('error') }}</span>
             </div>
         @endif
     </div>
 
-    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         @yield('content')
     </main>
 
-    <footer class="border-t border-glassBorder bg-darkCard/40 py-6 mt-auto">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-4">
+    <footer class="border-t border-surface-border bg-surface-card/40 py-5 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-3">
             <div class="flex items-center space-x-2">
-                <span><b>OmniScrape AI</b> — Engineered by Shakhawat Sakib</span>
-                <span class="text-slate-600">•</span>
-                <span class="text-cyan-400 font-mono">Laravel 12 + Playwright + Gemini 2.5</span>
+                <span class="text-slate-400 font-medium">OmniScrape Engine</span>
+                <span>•</span>
+                <span>Laravel 12 / Playwright / Gemini 2.5</span>
             </div>
-            <div class="flex items-center space-x-4 font-mono">
-                <span class="text-emerald-400 flex items-center"><i class="fa-solid fa-shield-halved mr-1"></i> Auto-Recovery 99.4%</span>
-                <span class="text-slate-500">|</span>
-                <span>REST API v1.0</span>
+            <div class="flex items-center space-x-4 font-mono text-[11px]">
+                <span class="text-slate-400">Self-Healing Watchdog v2.1</span>
+                <span>•</span>
+                <span class="text-slate-400">REST API v1.0</span>
             </div>
         </div>
     </footer>
