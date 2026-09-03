@@ -12,6 +12,7 @@ Route::post('/projects', [ProjectController::class, 'store'])->name('projects.st
 Route::get('/projects/{id}', [ProjectController::class, 'show'])->name('projects.show');
 Route::post('/projects/{id}/run', [ProjectController::class, 'runNow'])->name('projects.run');
 Route::get('/projects/{id}/api-docs', [ProjectController::class, 'apiDocs'])->name('projects.api-docs');
+Route::get('/proxy/render', [ProjectController::class, 'proxyRender'])->name('proxy.render');
 
 // Public Dynamic REST API Endpoints
 Route::prefix('api/v1')->group(function () {

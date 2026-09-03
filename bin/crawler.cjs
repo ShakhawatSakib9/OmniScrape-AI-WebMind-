@@ -1,4 +1,4 @@
-﻿const { chromium } = require('playwright');
+const { chromium } = require('playwright');
 const cheerio = require('cheerio');
 const fs = require('fs');
 
@@ -229,6 +229,27 @@ async function run() {
       console.log(JSON.stringify({
         success: true,
         evaluations,
+        execution_time_ms: Date.now() - startTime
+      }));
+      await browser.close();
+      return;
+    }
+
+    // Mode 4: Fetch Proxy DOM for Visual Picker (Keeps styles, fixes relative links)
+    if (mode === 'fetch-proxy-dom') {
+      const fullHtml = await page.content();
+      
+      // Inject base tag so relative CSS/Images load correctly in the iframe
+      const proxyHtml = fullHtml.replace(
+        /<head([^>]*)>/i, 
+        `<head$1>\n  <base href="${currentUrl}">\n`
+      );
+
+      console.log(JSON.stringify({
+        success: true,
+        title,
+        url: currentUrl,
+        html: proxyHtml,
         execution_time_ms: Date.now() - startTime
       }));
       await browser.close();

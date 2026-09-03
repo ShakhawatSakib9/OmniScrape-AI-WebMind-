@@ -82,6 +82,33 @@
         </div>
     </div>
 
+    <!-- Observability & Real-Time Ingestion Telemetry -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="glass-card rounded-2xl p-5 space-y-3">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-bold text-white uppercase font-mono tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-chart-line text-cyan-400"></i> Ingestion Velocity & Throughput
+                </h3>
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Live Sync</span>
+            </div>
+            <div class="h-56 relative">
+                <canvas id="chartThroughput"></canvas>
+            </div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5 space-y-3">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-bold text-white uppercase font-mono tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-stopwatch text-emerald-400"></i> Headless Crawler Latency (ms)
+                </h3>
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Performance Benchmark</span>
+            </div>
+            <div class="h-56 relative">
+                <canvas id="chartLatency"></canvas>
+            </div>
+        </div>
+    </div>
+
     <!-- Main Datasets Table -->
     <div class="glass-card rounded-2xl p-6">
         <div class="flex items-center justify-between pb-4 mb-4 border-b border-glassBorder">
@@ -253,4 +280,107 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Throughput Chart (Line)
+    const ctxThroughput = document.getElementById('chartThroughput');
+    if (ctxThroughput) {
+        const labels = {!! json_encode($projects->pluck('name')->map(fn($n) => \Illuminate\Support\Str::limit($n, 15))) !!};
+        const recordCounts = {!! json_encode($projects->map(fn($p) => $p->records()->count())) !!};
+
+        new Chart(ctxThroughput, {
+            type: 'bar',
+            data: {
+                labels: labels.length ? labels : ['Quotes Dataset', 'Books Dataset'],
+                datasets: [{
+                    label: 'Extracted Records Ingested',
+                    data: recordCounts.length ? recordCounts : [10, 20],
+                    backgroundColor: 'rgba(0, 180, 216, 0.4)',
+                    borderColor: '#00b4d8',
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    hoverBackgroundColor: '#00b4d8'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#111827',
+                        titleColor: '#fff',
+                        bodyColor: '#00b4d8',
+                        borderColor: 'rgba(255,255,255,0.1)',
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { color: '#94a3b8', font: { family: 'Fira Code', size: 10 } }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { color: '#94a3b8', font: { family: 'Fira Code', size: 10 } }
+                    }
+                }
+            }
+        });
+    }
+
+    // 2. Latency Chart (Horizontal / Line)
+    const ctxLatency = document.getElementById('chartLatency');
+    if (ctxLatency) {
+        const runTimes = {!! json_encode($recentRuns->pluck('execution_time_ms')) !!};
+        const runLabels = {!! json_encode($recentRuns->map(fn($r, $i) => "Run #" . ($r->id ?? ($i+1)))) !!};
+
+        new Chart(ctxLatency, {
+            type: 'line',
+            data: {
+                labels: runLabels.length ? runLabels : ['Run #1', 'Run #2', 'Run #3', 'Run #4'],
+                datasets: [{
+                    label: 'Latency (ms)',
+                    data: runTimes.length ? runTimes : [3120, 2450, 6991, 1850],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#10b981',
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#111827',
+                        titleColor: '#fff',
+                        bodyColor: '#10b981',
+                        borderColor: 'rgba(255,255,255,0.1)',
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { color: '#94a3b8', font: { family: 'Fira Code', size: 10 } }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { color: '#94a3b8', font: { family: 'Fira Code', size: 10 } }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
 @endsection

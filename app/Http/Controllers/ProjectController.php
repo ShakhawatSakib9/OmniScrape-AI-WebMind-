@@ -262,4 +262,39 @@ class ProjectController extends Controller
         $project = ScrapingProject::with(['schemas'])->findOrFail($id);
         return view('dashboard.api_docs', compact('project'));
     }
+
+    public function proxyRender(\Illuminate\Http\Request $request)
+    {
+        $url = $request->query('url');
+        if (!$url) return response('Missing URL', 400);
+
+        // Run crawler in proxy mode
+        $nodePath = 'node';
+        $scriptPath = base_path('bin/crawler.cjs');
+        
+        $config = json_encode(['url' => $url, 'timeout' => 15000]);
+        $escapedConfig = addslashes($config);
+        
+        $cmd = "\"{$nodePath}\" \"{$scriptPath}\" fetch-proxy-dom \"{$escapedConfig}\"";
+        
+        $process = \Symfony\Component\Process\Process::fromShellCommandline($cmd);
+        $process->setTimeout(30);
+        $process->run();
+        
+        if (!$process->isSuccessful()) {
+            return response('Proxy fetch failed', 500);
+        }
+
+        $output = json_decode($process->getOutput(), true);
+        if (!$output || !$output['success']) {
+            return response('Proxy extraction failed', 500);
+        }
+
+        // Add OmniPicker JS and return
+        $html = $output['html'];
+        $pickerScript = "<script src='/js/omnipicker.js'></script>";
+        $html = str_replace('</body>', $pickerScript . '</body>', $html);
+
+        return response($html);
+    }
 }

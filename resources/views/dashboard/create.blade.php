@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('content')
 <div class="max-w-4xl mx-auto space-y-6">
@@ -43,14 +43,67 @@
             </div>
         </div>
 
-        <div class="pt-2 flex items-center justify-between">
+        <div class="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4">
             <a href="{{ route('dashboard') }}" class="text-xs font-medium text-slate-400 hover:text-slate-300">
                 <i class="fa-solid fa-arrow-left mr-1"></i> Cancel
             </a>
-            <button type="button" id="btn-analyze" onclick="startAIAnalysis()" class="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-sm glow-btn transition flex items-center gap-2">
-                <i class="fa-solid fa-brain"></i>
-                <span>Analyze DOM & Infer Schema</span>
-            </button>
+            <div class="flex items-center gap-3 w-full sm:w-auto">
+                <button type="button" onclick="openVisualPicker()" class="px-5 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 font-bold text-sm transition flex items-center gap-2">
+                    <i class="fa-solid fa-crosshairs"></i>
+                    <span>Visual Picker</span>
+                </button>
+                <button type="button" id="btn-analyze" onclick="startAIAnalysis()" class="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-sm glow-btn transition flex items-center gap-2 flex-grow sm:flex-grow-0 justify-center">
+                    <i class="fa-solid fa-brain"></i>
+                    <span>Analyze DOM & Infer Schema</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Visual Picker Modal (Full Screen) -->
+    <div id="visual-picker-modal" class="fixed inset-0 z-[100] hidden bg-darkBg flex flex-col">
+        <!-- Header -->
+        <div class="h-14 border-b border-glassBorder bg-darkCard/90 flex items-center justify-between px-6 shrink-0">
+            <div class="flex items-center gap-4">
+                <div class="text-cyan-400"><i class="fa-solid fa-crosshairs text-xl"></i></div>
+                <div>
+                    <h2 class="text-white font-bold text-sm">Visual Selector Playground</h2>
+                    <p class="text-xs text-slate-400 font-mono" id="vp-url-display">Loading...</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="closeVisualPicker()" class="px-4 py-1.5 rounded-lg bg-slate-800 hover:bg-rose-500/20 hover:text-rose-400 text-slate-300 text-xs font-bold transition">
+                    Close
+                </button>
+                <button onclick="applyVisualSelections()" class="px-4 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-900 text-xs font-bold shadow-lg shadow-cyan-500/20 transition">
+                    Apply Selections
+                </button>
+            </div>
+        </div>
+        
+        <!-- Workspace -->
+        <div class="flex-1 flex overflow-hidden">
+            <!-- Iframe Canvas -->
+            <div class="flex-1 bg-white relative">
+                <div id="vp-loading" class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm flex flex-col items-center justify-center z-10 text-cyan-400">
+                    <i class="fa-solid fa-circle-notch animate-spin text-4xl mb-4"></i>
+                    <p class="font-mono font-bold tracking-widest text-sm">RENDERING SECURE CANVAS...</p>
+                </div>
+                <iframe id="vp-iframe" class="w-full h-full border-0" sandbox="allow-same-origin allow-scripts"></iframe>
+            </div>
+            
+            <!-- Sidebar -->
+            <div class="w-80 bg-darkCard border-l border-glassBorder flex flex-col shrink-0">
+                <div class="p-4 border-b border-glassBorder">
+                    <h3 class="text-sm font-bold text-white uppercase tracking-wider mb-1">Selected Elements</h3>
+                    <p class="text-xs text-slate-400">Click elements in the browser canvas to extract them.</p>
+                </div>
+                <div class="flex-1 overflow-y-auto p-4 space-y-3" id="vp-selections-list">
+                    <div class="text-center text-slate-500 text-xs py-8 border-2 border-dashed border-slate-700 rounded-xl">
+                        No elements selected yet.
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -130,6 +183,93 @@
 @section('scripts')
 <script>
 let currentInference = null;
+let visualSelections = [];
+
+function openVisualPicker() {
+    const url = document.getElementById('target_url').value.trim();
+    if (!url) {
+        alert('Please enter a target URL first.');
+        return;
+    }
+    
+    document.getElementById('vp-url-display').innerText = url;
+    document.getElementById('visual-picker-modal').classList.remove('hidden');
+    document.getElementById('vp-loading').classList.remove('hidden');
+    
+    // Load proxy URL
+    const iframe = document.getElementById('vp-iframe');
+    iframe.src = "{{ route('proxy.render') }}?url=" + encodeURIComponent(url);
+    
+    iframe.onload = () => {
+        document.getElementById('vp-loading').classList.add('hidden');
+    };
+}
+
+function closeVisualPicker() {
+    document.getElementById('visual-picker-modal').classList.add('hidden');
+    document.getElementById('vp-iframe').src = 'about:blank';
+}
+
+// Listen for messages from OmniPicker iframe
+window.addEventListener('message', (e) => {
+    if (e.data && e.data.type === 'OMNIPICKER_SELECTION') {
+        visualSelections.push({
+            selector: e.data.selector,
+            text: e.data.text,
+            tag: e.data.tag,
+            id: Date.now()
+        });
+        renderVisualSelections();
+    }
+});
+
+function removeSelection(id) {
+    visualSelections = visualSelections.filter(s => s.id !== id);
+    renderVisualSelections();
+}
+
+function renderVisualSelections() {
+    const list = document.getElementById('vp-selections-list');
+    if (visualSelections.length === 0) {
+        list.innerHTML = `<div class="text-center text-slate-500 text-xs py-8 border-2 border-dashed border-slate-700 rounded-xl">No elements selected yet.</div>`;
+        return;
+    }
+    
+    let html = '';
+    visualSelections.forEach((sel, i) => {
+        html += `
+        <div class="p-3 bg-slate-800 rounded-xl border border-slate-700 relative group">
+            <button onclick="removeSelection(${sel.id})" class="absolute top-2 right-2 text-slate-500 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="text-[10px] font-mono text-cyan-400 mb-1 truncate pr-6">${sel.selector}</div>
+            <div class="text-xs text-slate-300 italic truncate border-l-2 border-cyan-500 pl-2">"${sel.text}"</div>
+            <input type="text" id="vs-name-${sel.id}" placeholder="Field name (e.g. price)" class="mt-2 w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white placeholder:text-slate-600 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition outline-none">
+        </div>`;
+    });
+    list.innerHTML = html;
+}
+
+function applyVisualSelections() {
+    if (visualSelections.length === 0) {
+        closeVisualPicker();
+        return;
+    }
+    
+    let promptParts = [];
+    visualSelections.forEach(sel => {
+        const fieldNameInput = document.getElementById(`vs-name-${sel.id}`);
+        const name = fieldNameInput && fieldNameInput.value.trim() ? fieldNameInput.value.trim() : `the ${sel.tag} text`;
+        promptParts.push(`Extract ${name} from "${sel.selector}"`);
+    });
+    
+    const newPrompt = "I have visually selected the following elements. Please configure the schema based on these exact selectors:\n\n" + promptParts.join('\n');
+    document.getElementById('prompt_text').value = newPrompt;
+    
+    closeVisualPicker();
+    // Start analysis automatically since we have exact selectors
+    startAIAnalysis();
+}
 
 function setPreset(url, prompt) {
     document.getElementById('target_url').value = url;
