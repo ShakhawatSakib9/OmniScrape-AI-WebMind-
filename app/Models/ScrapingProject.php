@@ -34,6 +34,11 @@ class ScrapingProject extends Model
         });
     }
 
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
     public function schemas()
     {
         return $this->hasMany(ProjectSchema::class, 'project_id');

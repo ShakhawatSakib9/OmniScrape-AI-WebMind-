@@ -114,6 +114,7 @@ class ProjectController extends Controller
         ]);
 
         $project = ScrapingProject::create([
+            'user_id' => auth()->id(),
             'name' => $request->name,
             'slug' => Str::slug($request->name) . '-' . Str::lower(Str::random(5)),
             'target_url' => $request->target_url,

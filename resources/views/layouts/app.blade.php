@@ -128,15 +128,27 @@
             </div>
         </div>
 
-        <!-- Sidebar Footer Status -->
+        <!-- Sidebar Footer Status & User Profile -->
         <div class="p-4 border-t border-[#1e293b] space-y-3 sticky bottom-0 bg-[#0f172a]">
-            <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-400 space-y-1">
-                <div class="flex items-center justify-between text-slate-200 font-semibold">
-                    <span>Engine Runtime</span>
-                    <span class="text-emerald-400 font-mono">99.8%</span>
+            @auth
+                <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <div class="w-8 h-8 rounded-lg bg-blue-600/30 text-blue-400 border border-blue-500/40 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                            {{ substr(auth()->user()->name, 0, 2) }}
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="text-xs font-bold text-white truncate">{{ auth()->user()->name }}</div>
+                            <div class="text-[10px] text-slate-400 truncate font-mono">{{ auth()->user()->email }}</div>
+                        </div>
+                    </div>
+                    <form action="{{ route('logout') }}" method="POST" class="inline">
+                        @csrf
+                        <button type="submit" title="Sign Out" class="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-rose-400 transition text-xs">
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        </button>
+                    </form>
                 </div>
-                <div>Playwright + Gemini 2.5 Ingestion</div>
-            </div>
+            @endauth
         </div>
     </aside>
 
@@ -157,6 +169,12 @@
             </div>
 
             <div class="flex items-center gap-3">
+                @auth
+                    <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-300">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                        <span class="font-bold text-white">{{ auth()->user()->name }}</span>
+                    </div>
+                @endauth
                 <a href="{{ route('projects.create') }}" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm shadow-sm transition flex items-center gap-2">
                     <i class="fa-solid fa-plus text-xs"></i>
                     <span>New Scraper</span>

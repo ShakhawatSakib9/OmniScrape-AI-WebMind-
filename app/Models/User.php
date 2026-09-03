@@ -46,4 +46,14 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function projects()
+    {
+        return $this->hasMany(ScrapingProject::class, 'user_id');
+    }
+
+    public function apiKeys()
+    {
+        return $this->hasMany(ApiKey::class, 'user_id');
+    }
 }
