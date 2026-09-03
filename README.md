@@ -31,8 +31,8 @@ Traditional web scraping architectures suffer from two structural vulnerabilitie
 • 🧠 Natural Language to Schema Inference: Plain English Prompt + URL → Structured Schema & Selectors
 • 🕷️ Headless Browser Worker: Handles dynamic React/Vue SPAs, lazy loading, and infinite scrolling
 • 🛡️ The Self-Healing Moat: Detects DOM drift, discovers replacements, validates with empirical scoring
-• ⚡ Instant Dynamic REST API: Auto-provisions filtered, paginated endpoints (/api/v1/datasets/{slug})
-• 🔐 Enterprise Security: SSRF protection, private IP blocking, sandboxed browser execution
+• ⚡ Dynamic REST API Engine: Auto-provisions filtered, paginated endpoints (/api/v1/datasets/{slug})
+• 🔐 Enterprise Security: SSRF protection, private IP blocking, isolated browser execution
 • ⚙️ Asynchronous Queue Engine: Redis-backed background workers with 3-tier exponential backoff
 ```
 
