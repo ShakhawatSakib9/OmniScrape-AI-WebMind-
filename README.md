@@ -149,7 +149,7 @@ When a target website updates its DOM markup, traditional scrapers fail silently
 │ 5. Empirical Verification: Playwright test-evaluates candidates on live DOM    │
 │ 6. Confidence Scoring: Calculates Composite Score (Weights: 0.35/0.30/0.20/0.15)│
 │ 7. Hot-Swap & Audit: If Score >= 70%, updates DB selector & logs full audit   │
-│ 8. Ingestion Recovery: Re-runs extraction pass with 0 manual intervention     │
+│ 8. Ingestion Recovery: Re-runs extraction after successful selector repair    │
 └───────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -161,7 +161,7 @@ $$\text{Confidence Score} = (M_{\text{structural}} \times 0.35) + (C_{\text{cove
 
 Where:
 - **$M_{\text{structural}}$ (35%):** Structural DOM match density — ensures candidate selector maps to the expected container depth.
-- **$C_{\text{coverage}}$ (30%):** Population fill rate across sample target items (asserting $> 90\%$ non-null matches).
+- **$C_{\text{coverage}}$ (30%):** Percentage of sampled target items for which the candidate selector returns a non-null value (targeting $\ge 90\%$ non-null coverage across sampled rows).
 - **$V_{\text{validity}}$ (20%):** Data type & regex validation score (e.g. numeric integrity for prices, URL formatting for links).
 - **$S_{\text{specificity}}$ (15%):** Selector specificity index — penalizes overly generic selectors (like bare `div` or `span`) to prevent false-positive drift.
 
@@ -212,8 +212,8 @@ sequenceDiagram
 
 | Security Vector | Mitigation Strategy | Implementation Details |
 |---|---|---|
-| **SSRF Vulnerabilities** | Private IP & Loopback Filter | Rejects RFC 1918 private subnets (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `127.0.0.1/8`) from arbitrary user inputs in production. |
-| **Sandboxed Browser** | Process Isolation | Playwright instances run with `--disable-blink-features=AutomationControlled`, `--disable-dev-shm-usage`, and isolated browser contexts. |
+| **SSRF Protection** | Multi-Layer Network Filtering | Enforces HTTP/HTTPS-only schemes, loopback blocking (`127.0.0.0/8`, `::1`), RFC 1918 private subnets, link-local ranges (`169.254.0.0/16`, `fe80::/10`), DNS pre-resolution validation, and redirect re-validation. |
+| **Browser Context Isolation** | Ephemeral Contexts | Each extraction executes in an isolated, stateless Playwright browser context with strict origin separation. |
 | **Resource Exhaustion** | Crawl Depth & Timeout Caps | Hard limit of 30 seconds per navigation, maximum 20 pages per batch crawl, and 90-second process termination. |
 | **Token Cost Guard** | Semantic DOM Minifier | Strips scripts, SVGs, style tags, and tracking attributes before LLM ingestion, capping payload budgets at 35KB. |
 | **API Authentication** | Rate Limiting & Hashing | Public REST endpoints are guarded by `throttle:60,1` (60 req/min) and custom `api_keys` token validation. |
@@ -227,7 +227,7 @@ sequenceDiagram
 |---|---|---|
 | **Transient Network / DNS Glitch** | 3-stage exponential backoff retry ($10\text{s} \rightarrow 30\text{s} \rightarrow 90\text{s}$) in queue worker. | Auto-Recovered |
 | **Target Website CSS Renamed** | Self-Healing Watchdog re-analyzes DOM, discovers replacement selectors, and hot-swaps DB. | `status = 'healed'` |
-| **Anti-Bot Cloudflare Challenge** | Viewport randomization, realistic Chrome headers, and automated scroll deceleration. | Ingestion Active |
+| **Anti-Bot / Access Restriction** | Detects blocked or challenge responses and records the run as restricted for administrative review. | `status = 'restricted'` |
 | **Repeated Unchanged Data** | SHA-256 fingerprint matching updates `last_seen_at` without duplicate record insertions. | Idempotent Sync |
 | **Hard Node/Process Crash** | Symfony Process wrapper catches stderr, terminates orphaned Chromium PIDs, logs stack trace. | `status = 'failed'` |
 
