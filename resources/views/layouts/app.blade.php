@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en" class="dark h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -32,7 +32,9 @@
         }
     </script>
     <style>
-        body {
+        html, body {
+            height: 100%;
+            overflow: hidden;
             background-color: #0b1120;
             color: #f1f5f9;
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -52,15 +54,30 @@
             outline: none;
             box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
         }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b1120;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
     </style>
 </head>
-<body class="min-h-screen flex bg-[#0b1120] text-slate-100 antialiased">
+<body class="h-full flex bg-[#0b1120] text-slate-100 antialiased overflow-hidden">
     
-    <!-- Left Navigation Sidebar (Full Height Desktop) -->
-    <aside class="w-64 bg-[#0f172a] border-r border-[#1e293b] flex-shrink-0 flex flex-col justify-between hidden md:flex min-h-screen">
+    <!-- Left Navigation Sidebar (Independent Scrollable Container) -->
+    <aside class="w-64 h-full overflow-y-auto bg-[#0f172a] border-r border-[#1e293b] flex-shrink-0 flex flex-col justify-between hidden md:flex z-30">
         <div>
             <!-- Logo & Brand Header -->
-            <div class="h-16 px-6 flex items-center gap-3 border-b border-[#1e293b]">
+            <div class="h-16 px-6 flex items-center gap-3 border-b border-[#1e293b] sticky top-0 bg-[#0f172a] z-10">
                 <div class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white text-base font-extrabold shadow-md">
                     <i class="fa-solid fa-cube"></i>
                 </div>
@@ -112,7 +129,7 @@
         </div>
 
         <!-- Sidebar Footer Status -->
-        <div class="p-4 border-t border-[#1e293b] space-y-3">
+        <div class="p-4 border-t border-[#1e293b] space-y-3 sticky bottom-0 bg-[#0f172a]">
             <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-400 space-y-1">
                 <div class="flex items-center justify-between text-slate-200 font-semibold">
                     <span>Engine Runtime</span>
@@ -123,12 +140,12 @@
         </div>
     </aside>
 
-    <!-- Main Content Area (Full Screen Width) -->
-    <div class="flex-1 flex flex-col min-w-0">
-        <!-- Top Navbar -->
-        <header class="h-16 bg-[#0f172a] border-b border-[#1e293b] px-6 sm:px-8 flex items-center justify-between sticky top-0 z-40">
+    <!-- Main Content Area (Independent Scrollable Container) -->
+    <div class="flex-1 h-full overflow-y-auto flex flex-col min-w-0 bg-[#0b1120]">
+        <!-- Sticky Top Navbar -->
+        <header class="h-16 bg-[#0f172a]/95 backdrop-blur-md border-b border-[#1e293b] px-6 sm:px-8 flex items-center justify-between sticky top-0 z-20 flex-shrink-0">
             <div class="flex items-center gap-4">
-                <!-- Mobile Logo -->
+                <!-- Mobile Logo Button -->
                 <a href="{{ route('dashboard') }}" class="md:hidden flex items-center gap-2">
                     <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
                         <i class="fa-solid fa-cube"></i>
@@ -148,7 +165,7 @@
         </header>
 
         <!-- Flash Alert Messages -->
-        <div class="px-6 sm:px-8 pt-4">
+        <div class="px-6 sm:px-8 pt-4 flex-shrink-0">
             @if(session('success'))
                 <div class="p-4 rounded-xl bg-emerald-950/40 border border-emerald-800/60 text-emerald-200 text-sm flex items-center gap-3">
                     <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
