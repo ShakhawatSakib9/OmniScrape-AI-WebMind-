@@ -12,6 +12,7 @@ use App\Services\CrawlerService;
 use App\Services\GeminiAIService;
 use App\Services\SelfHealingService;
 use App\Services\WebhookService;
+use App\Services\DataMutationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -21,17 +22,20 @@ class ProjectController extends Controller
     protected GeminiAIService $ai;
     protected SelfHealingService $healing;
     protected WebhookService $webhooks;
+    protected DataMutationService $mutations;
 
     public function __construct(
         CrawlerService $crawler,
         GeminiAIService $ai,
         SelfHealingService $healing,
-        WebhookService $webhooks
+        WebhookService $webhooks,
+        DataMutationService $mutations
     ) {
         $this->crawler = $crawler;
         $this->ai = $ai;
         $this->healing = $healing;
         $this->webhooks = $webhooks;
+        $this->mutations = $mutations;
     }
 
     public function index()
@@ -200,6 +204,9 @@ class ProjectController extends Controller
             $extractResult = $this->crawler->extractData($project);
             $rawRecords = $extractResult['records'] ?? [];
         }
+
+        // Track data mutations & trigger smart alerts
+        $mutationsFound = $this->mutations->trackMutations($project, $rawRecords);
 
         // 3. Save / Upsert Records
         $newCount = 0;
