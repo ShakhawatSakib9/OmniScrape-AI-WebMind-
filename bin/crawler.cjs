@@ -31,10 +31,20 @@ async function run() {
       ]
     });
 
-    const context = await browser.newContext({
-      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-      viewport: { width: 1366, height: 768 }
-    });
+    const contextOptions = {
+      userAgent: config.user_agent || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+      viewport: { width: 1366 + Math.floor(Math.random() * 50), height: 768 + Math.floor(Math.random() * 30) }
+    };
+
+    if (config.proxy && config.proxy.server) {
+      contextOptions.proxy = {
+        server: config.proxy.server,
+        username: config.proxy.username || undefined,
+        password: config.proxy.password || undefined
+      };
+    }
+
+    const context = await browser.newContext(contextOptions);
 
     const page = await context.newPage();
     page.setDefaultTimeout(config.timeout || 30000);
@@ -42,6 +52,32 @@ async function run() {
     const targetUrl = config.url;
     if (!targetUrl) {
       throw new Error('Target URL is required');
+    }
+
+    // Handle Pre-Extraction Authentication if configured
+    if (config.auth_type === 'form_login' && config.auth_config) {
+      try {
+        const auth = config.auth_config;
+        if (auth.login_url && auth.username_selector && auth.password_selector) {
+          await page.goto(auth.login_url, { waitUntil: 'domcontentloaded' });
+          if (auth.username) await page.fill(auth.username_selector, auth.username);
+          if (auth.password) await page.fill(auth.password_selector, auth.password);
+          if (auth.submit_selector) {
+            await Promise.all([
+              page.waitForNavigation({ timeout: 15000 }).catch(() => {}),
+              page.click(auth.submit_selector)
+            ]);
+          }
+          await page.waitForTimeout(1000);
+        }
+      } catch (authErr) {
+        // Continue and attempt target page even if login flow threw error
+      }
+    } else if (config.auth_type === 'cookies' && config.session_cookies) {
+      try {
+        const cookies = typeof config.session_cookies === 'string' ? JSON.parse(config.session_cookies) : config.session_cookies;
+        await context.addCookies(cookies);
+      } catch (_) {}
     }
 
     // Navigate to page

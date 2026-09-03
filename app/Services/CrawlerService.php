@@ -35,6 +35,21 @@ class CrawlerService
             ];
         }
 
+        // Select active proxy from pool if available
+        $proxyData = null;
+        $proxy = \App\Models\Proxy::where('status', 'active')->orderBy('last_used_at', 'asc')->first();
+        if ($proxy) {
+            $proxy->update([
+                'last_used_at' => now(),
+                'total_requests' => $proxy->total_requests + 1
+            ]);
+            $proxyData = [
+                'server' => "{$proxy->protocol}://{$proxy->ip_address}:{$proxy->port}",
+                'username' => $proxy->username,
+                'password' => $proxy->password,
+            ];
+        }
+
         $payload = json_encode([
             'url' => $project->target_url,
             'container_selector' => $project->container_selector,
@@ -42,6 +57,10 @@ class CrawlerService
             'pagination_selector' => $project->pagination_selector,
             'max_pages' => $project->max_pages ?? 1,
             'selectors' => $selectorsConfig,
+            'auth_type' => $project->auth_type ?? 'none',
+            'auth_config' => $project->auth_config ?? null,
+            'session_cookies' => $project->session_cookies ?? null,
+            'proxy' => $proxyData,
         ]);
 
         return $this->executeNode('extract-data', $payload);

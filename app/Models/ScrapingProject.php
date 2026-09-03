@@ -11,10 +11,12 @@ class ScrapingProject extends Model
         'uuid', 'name', 'slug', 'target_url', 'prompt',
         'frequency_cron', 'status', 'pagination_type',
         'pagination_selector', 'max_pages', 'items_per_page',
-        'container_selector', 'last_run_at', 'next_run_at'
+        'container_selector', 'auth_type', 'auth_config',
+        'session_cookies', 'last_run_at', 'next_run_at'
     ];
 
     protected $casts = [
+        'auth_config' => 'array',
         'last_run_at' => 'datetime',
         'next_run_at' => 'datetime',
     ];
