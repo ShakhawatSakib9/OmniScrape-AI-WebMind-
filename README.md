@@ -161,7 +161,7 @@ $$\text{Confidence Score} = (M_{\text{structural}} \times 0.35) + (C_{\text{cove
 
 Where:
 - **$M_{\text{structural}}$ (35%):** Structural DOM match density — ensures candidate selector maps to the expected container depth.
-- **$C_{\text{coverage}}$ (30%):** Percentage of sampled target items for which the candidate selector returns a non-null value (targeting $\ge 90\%$ non-null coverage across sampled rows).
+- **$C_{\text{coverage}}$ (30%):** Percentage of sampled target items for which the candidate selector returns a non-null value (targeting $\ge 90\%$ non-null coverage across sampled target items).
 - **$V_{\text{validity}}$ (20%):** Data type & regex validation score (e.g. numeric integrity for prices, URL formatting for links).
 - **$S_{\text{specificity}}$ (15%):** Selector specificity index — penalizes overly generic selectors (like bare `div` or `span`) to prevent false-positive drift.
 
@@ -213,7 +213,7 @@ sequenceDiagram
 | Security Vector | Mitigation Strategy | Implementation Details |
 |---|---|---|
 | **SSRF Protection** | Multi-Layer Network Filtering | Enforces HTTP/HTTPS-only schemes, loopback blocking (`127.0.0.0/8`, `::1`), RFC 1918 private subnets, link-local ranges (`169.254.0.0/16`, `fe80::/10`), DNS pre-resolution validation, and redirect re-validation. |
-| **Browser Context Isolation** | Ephemeral Contexts | Each extraction executes in an isolated, stateless Playwright browser context with strict origin separation. |
+| **Browser Context Isolation** | Ephemeral Contexts | Each extraction executes in an isolated, stateless Playwright browser context with ephemeral session and cache boundaries. |
 | **Resource Exhaustion** | Crawl Depth & Timeout Caps | Hard limit of 30 seconds per navigation, maximum 20 pages per batch crawl, and 90-second process termination. |
 | **Token Cost Guard** | Semantic DOM Minifier | Strips scripts, SVGs, style tags, and tracking attributes before LLM ingestion, capping payload budgets at 35KB. |
 | **API Authentication** | Rate Limiting & Hashing | Public REST endpoints are guarded by `throttle:60,1` (60 req/min) and custom `api_keys` token validation. |
@@ -225,7 +225,7 @@ sequenceDiagram
 
 | Failure Scenario | Automatic Recovery Mechanism | Final State |
 |---|---|---|
-| **Transient Network / DNS Glitch** | 3-stage exponential backoff retry ($10\text{s} \rightarrow 30\text{s} \rightarrow 90\text{s}$) in queue worker. | Auto-Recovered |
+| **Transient Network / DNS Glitch** | 3-stage exponential backoff retry ($10\text{s} \rightarrow 30\text{s} \rightarrow 90\text{s}$) in queue worker. | Recovered after retry |
 | **Target Website CSS Renamed** | Self-Healing Watchdog re-analyzes DOM, discovers replacement selectors, and hot-swaps DB. | `status = 'healed'` |
 | **Anti-Bot / Access Restriction** | Detects blocked or challenge responses and records the run as restricted for administrative review. | `status = 'restricted'` |
 | **Repeated Unchanged Data** | SHA-256 fingerprint matching updates `last_seen_at` without duplicate record insertions. | Idempotent Sync |
@@ -305,7 +305,7 @@ Every scraping project automatically exposes a query-optimized REST endpoint:
   "data": [
     {
       "_id": 1,
-      "_record_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "_record_hash": "7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069",
       "_first_seen_at": "2026-09-03T10:00:00.000Z",
       "_last_seen_at": "2026-09-03T10:00:00.000Z",
       "quote_text": "“The world as we have created it is a process of our thinking...”",
